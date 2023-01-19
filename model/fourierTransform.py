@@ -12,16 +12,18 @@ import numpy as np
 import cmath, math
 import sys
 
-def plotSpectrum(x, Fs, type = 'FFT'):
+def plotSpectrum(x, Fs, t):
 
 	n = len(x)             # length of the signal
 	df = Fs/n              # frequency increment (width of freq bin)
 
 	# compute Fourier transform, its magnitude and normalize it before plotting
-	if type == 'FFT':
+	if t == 'FFT':
 		Xfreq = np.fft.fft(x)
+	elif t == 'DFT':
+		Xfreq = DFT(x)
 	XMag = abs(Xfreq)/n
-
+            
 	# Note: because x is real, we keep only the positive half of the spectrum
 	# Note also: half of the energy is in the negative half (not plotted)
 	XMag = XMag[0:int(n/2)]
@@ -35,6 +37,22 @@ def plotSpectrum(x, Fs, type = 'FFT'):
 		title='Frequency domain plot')
 	# fig.savefig("freq.png")
 	plt.show()
+
+def DFT(x):
+	n = len(x)             # length of the signal
+	Xfreq = np.zeros((n), dtype = complex)
+	for m in range(n):
+		for k in range(n):
+			Xfreq[m] = Xfreq[m] + x[k]*cmath.exp(-2j*math.pi*k*m/n)
+	return Xfreq
+
+def IDFT(x):
+	n = len(x)
+	Xtime = np.zeros((n), dtype = complex)
+	for m in range(n):
+		for k in range(n):
+			Xtime[m] = Xtime[m] + x[k]*cmath.exp(2j*math.pi*k*m/n)
+	return Xtime/n
 
 def plotTime(x, time):
 
@@ -83,7 +101,8 @@ if __name__ == "__main__":
 		# plot the signal in time domain
 		plotTime(x, time)
 		# plot the signal in frequency domain
-		plotSpectrum(x, Fs, type = 'FFT')
+		t = 'FFT'
+		plotSpectrum(x, Fs, t)
 
 	elif (sys.argv[1] == 'il1'):
 
@@ -94,6 +113,15 @@ if __name__ == "__main__":
 		# plotSpectrum(x, Fs, type = 'your DFT name')
 
 		# confirm DFT/IDFT correctness by checking if x == IDFT(DFT(x))
+		time, x = generateSin(Fs, interval)
+		# plot the signal in time domain
+		plotTime(x, time)
+		# plot the signal in frequency domain
+		t = 'DFT'
+		plotSpectrum(x, Fs, t)
+		dft = DFT(x)
+		idft = IDFT(dft)
+		plotTime(idft, time)
 
 		# for further details, if any, check the lab document
 
@@ -102,6 +130,8 @@ if __name__ == "__main__":
 		print('In-lab experiment 2 for the Fourier transform')
 
 		# use np.random.randn() for randomization
+		signal = 10*np.random.randn(1000)
+		
 		# we can overwrite the default values
 		# frequency =  8.0                     # frequency of the signal
 		# amplitude =  3.0                     # amplitude of the signal
@@ -133,3 +163,4 @@ if __name__ == "__main__":
 		cli_error_msg()
 
 	plt.show()
+
